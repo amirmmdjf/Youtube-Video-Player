@@ -33,6 +33,7 @@ const VideoPlayer: React.FC = () => {
   const onPlayerReady = (event: { target: YT.Player }): void => {
     console.log('Player is ready', event.target);
   };
+  
 
   const onPlayerError = (event: { data: number }): void => {
     console.error('Error:', event.data);
