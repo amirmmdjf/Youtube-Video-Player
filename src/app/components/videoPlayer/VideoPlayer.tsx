@@ -23,14 +23,14 @@ const VideoPlayer: React.FC = () => {
     };
   }, [screenWidth]);
 
-  const inputRef: RefObject<HTMLInputElement> = useRef(null);
+  const inputRef: RefObject<HTMLInputElement | null> = useRef(null);
 
   const extractVideoId = (url: string): string | null => {
     const match = url.match(/(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/);
     return match ? match[1] : null;
   };
 
-  const onPlayerReady = (event: YouTubeProps['onReady']) => {
+  const onPlayerReady = (event: { target: YT.Player }): void => {
     console.log('Player is ready', event.target);
   };
 
