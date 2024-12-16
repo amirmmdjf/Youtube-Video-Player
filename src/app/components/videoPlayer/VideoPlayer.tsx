@@ -10,20 +10,23 @@ const VideoPlayer: React.FC = () => {
     return match ? match[1] : '';
   });
   const [err, setErr] = useState<boolean>(false);
-  const [screenWidth, setScreenWidth] = useState<number>(window.innerWidth);
-
-  useEffect(() => {
-    const handleResize = (): void => setScreenWidth(window.innerWidth);
-
-    window.addEventListener('resize', handleResize);
-
-    console.log(screenWidth);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [screenWidth]);
+  const [screenWidth, setScreenWidth] = useState<number | null>(null); // Initialize as null
 
   const inputRef: RefObject<HTMLInputElement | null> = useRef(null);
+
+  // Ensure screenWidth is updated only on the client
+  useEffect(() => {
+    const updateScreenWidth = (): void => setScreenWidth(window.innerWidth);
+
+    // Set initial width after mount
+    updateScreenWidth();
+
+    window.addEventListener('resize', updateScreenWidth);
+
+    return () => {
+      window.removeEventListener('resize', updateScreenWidth);
+    };
+  }, []);
 
   const extractVideoId = (url: string): string | null => {
     const match = url.match(/(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/);
@@ -33,15 +36,14 @@ const VideoPlayer: React.FC = () => {
   const onPlayerReady = (event: { target: YT.Player }): void => {
     console.log('Player is ready', event.target);
   };
-  
 
   const onPlayerError = (event: { data: number }): void => {
     console.error('Error:', event.data);
   };
 
   const opts: YouTubeProps['opts'] = {
-    height: screenWidth > 750 ? '400' : '350',
-    width: screenWidth > 750 ? '700' : '300',
+    height: screenWidth && screenWidth > 750 ? '400' : '350',
+    width: screenWidth && screenWidth > 750 ? '700' : '300',
     playerVars: {
       autoplay: 0,
     },
@@ -69,7 +71,7 @@ const VideoPlayer: React.FC = () => {
   return (
     <>
       <div className="flex flex-col max-sm:pt-10 mb-5">
-        <h1 className="mt-10 text-[40px] text-[#e93434]">Youtube Video player</h1>
+        <h1 className="mt-10 text-[40px] text-[#e93434]">YouTube Video Player</h1>
         <div className="flex justify-center mt-10">
           <input
             className="border-b py-1 px-2 outline-none w-full"
@@ -84,17 +86,19 @@ const VideoPlayer: React.FC = () => {
             Add
           </button>
         </div>
-        {err && <p className="text-red-500">Please enter url</p>}
+        {err && <p className="text-red-500">Please enter a valid URL</p>}
       </div>
 
       <div className="mt-8">
         {videoId ? (
-          <YouTube
-            videoId={videoId}
-            opts={opts}
-            onReady={onPlayerReady}
-            onError={onPlayerError}
-          />
+          screenWidth && (
+            <YouTube
+              videoId={videoId}
+              opts={opts}
+              onReady={onPlayerReady}
+              onError={onPlayerError}
+            />
+          )
         ) : (
           <p className="text-red-500 mt-4">Invalid YouTube URL</p>
         )}
